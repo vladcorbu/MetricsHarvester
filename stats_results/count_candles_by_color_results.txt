@@ -1,0 +1,3 @@
+Green candles: 117767.
+Red candles: 115652.
+No-change candles: 390.

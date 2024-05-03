@@ -1,0 +1,15 @@
+{
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true,
+    "black-formatter.args": [
+        "--line-length", "88",
+    ],
+    "[python]": {
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": "explicit"
+        },
+    },
+    "files.autoSave": "afterDelay",
+    "editor.autoIndent": "advanced",
+    "editor.insertSpaces": false
+}

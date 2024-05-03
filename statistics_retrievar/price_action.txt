@@ -1,4 +1,0 @@
-# Price action: BTC, 15m, 2017_2024
-Price went up: 117767 times       
-Price went down: 115652 times     
-Price remained the same: 390 times
