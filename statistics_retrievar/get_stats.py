@@ -3,57 +3,14 @@ import sys
 from typing import Dict, Tuple
 
 import pandas as pd
+from data_analyser import DataAnalyser
 
 SUPPORTED_COMMANDS_LIST = [
     "count_candles_by_color", 
     "group_candles_by_percentage_movement"
 ]
-def count_candles_by_color(file_path: str) -> Tuple[int, int, int]:
-    data = pd.read_csv(file_path)
 
-    green_candles_count = 0
-    red_candles_count = 0
-    no_change_candles_count = 0
-
-    for _, row in data.iterrows():
-        if row['Close'] > row['Open']:
-            green_candles_count += 1
-        elif row['Close'] < row['Open']:
-            red_candles_count += 1
-        else:
-            no_change_candles_count += 1
-            
-    return green_candles_count, red_candles_count, no_change_candles_count
-
-
-def getPercentageMovement(open_price: float, close_price: float) -> float:
-    return close_price / open_price - 1
-
-def create_dictionary(step: int) -> Dict[int, int]:
-    keys = list(range(0, 100, step)) + list(range(0, -100, -step))
-    my_dict = {key: 0 for key in keys}
-    return my_dict
-
-def group_candles_by_percentage_movement(file_path: str, interval_length: int) -> Dict[int, int]:
-    
-    data = pd.read_csv(file_path)
-    d = create_dictionary(interval_length)
-
-    for _, row in data.iterrows():
-        percentage_change = getPercentageMovement(
-            open_price=float(row['Open']),
-            close_price=float(row['Close'])
-        )
-
-        targetKey = int(percentage_change * 100 / interval_length) * interval_length
-        if percentage_change < 0:
-            targetKey = targetKey -interval_length
-
-        d[targetKey] = d.get(targetKey) + 1
-
-    return d
-
-def help():
+def help() -> None:
     print(f"""{sys.argv[0]} usage:
 1. command: python {sys.argv[0]} -cmd count_candles_by_color -i infile.csv -o outfile
 2. command: python {sys.argv[0]} -cmd group_candles_by_percentage_movement -i infile.csv -bz 2 -o outfile """)
@@ -73,29 +30,26 @@ def main():
     
     args = parser.parse_args()
     
-    cmd = args.command
-    infile = args.input
-    outfile = args.output
+    analyser = DataAnalyser(args.input)
+    analyser.lazyload_data()
     
-    with open(outfile, 'w+') as f:
+    with open(args.output, 'w+') as f:
      
-        if cmd == "count_candles_by_color":
+        if args.command == "count_candles_by_color":
             
-            green_candles_count, red_candles_count, no_change_candles_count = count_candles_by_color(infile)
+            green_candles_count, red_candles_count, gray_candles_count = analyser.count_candles_by_color()
             f.write(f"Green candles: {green_candles_count}.\n")
             f.write(f"Red candles: {red_candles_count}.\n")
-            f.write(f"No-change candles: {no_change_candles_count}.\n")
+            f.write(f"No-change candles: {gray_candles_count}.\n")
             
-        elif cmd == "group_candles_by_percentage_movement":
+        elif args.command == "group_candles_by_percentage_movement":
             
-            bucket_size = args.bucket_size
-            if bucket_size <= 0 or bucket_size >= 100:
-                print("Bucket Size must be an integer between 0 and 100.")
-            percentage_d: Dict[int, int] = group_candles_by_percentage_movement(infile, bucket_size)
-            for key in sorted(percentage_d.keys()):
-                interval_info = f"[{key}% -> {key+bucket_size-0.01}%]"
-                if percentage_d.get(key) != 0:
-                    f.write(f"Interval {interval_info} has {percentage_d.get(key)} samples.\n")
+            candles_grouping: Dict[int, int] = analyser.group_candles_by_percentage_change(args.bucket_size)
+            for key in sorted(candles_grouping.keys()):
+                interval_info = f"[{key}% -> {key + args.bucket_size - 0.01}%]"
+                # Zero values will be skipped when writing the results.   
+                if candles_grouping.get(key) != 0:
+                    f.write(f"Interval {interval_info} has {candles_grouping.get(key)} samples.\n")
     
         else:
             print(f"Wrong command! Supported commands are: {SUPPORTED_COMMANDS_LIST}.")
