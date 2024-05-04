@@ -1,5 +1,11 @@
-# ninja_makers
+# MetricsHarvester
 
+## Generate BTC dataset. Timeframe: 2017 - 2024. Interval: 15 minutes.
+```bash 
+python data_ingester.py # will create bitcoin_info.csv
+```
+
+## Generate statistics based on BTC dataset.
 ```bash
 1. python statistics_retrievar/get_stats.py -cmd count_candles_by_color -i data/bitcoin_2017_2024.csv -o stats_results/count_candles_by_color_results.txt
 
