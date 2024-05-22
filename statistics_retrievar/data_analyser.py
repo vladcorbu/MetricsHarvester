@@ -1,6 +1,7 @@
 import os
 from typing import Dict, Tuple
 
+import numpy as np
 import pandas as pd
 
 
@@ -22,7 +23,7 @@ class DataAnalyser:
                 raise Exception(f"{os.path.splitext(data_file)[1]} extension not supported.")
 
         self.data_file = data_file
-        self.data = None
+        self.data: pd.DataFrame = None
 
    
     def lazyload_data(self) -> None:
@@ -54,6 +55,26 @@ class DataAnalyser:
                 gray_candles_count += 1
                 
         return green_candles_count, red_candles_count, gray_candles_count
+
+
+    def count_consecutive_candles(self, group_size: int, color: str) -> int:
+        
+        df = self.data
+        if color == "green":
+            df['diff'] = df[self.CLOSE_PRICE_LABEL] - df[self.OPEN_PRICE_LABEL] > 0
+        else:
+            df['diff'] = df[self.CLOSE_PRICE_LABEL] - df[self.OPEN_PRICE_LABEL] < 0
+        
+        valid_sequences =  df['diff'].rolling(window=group_size).sum() == group_size
+
+        # Since each sequence of GROUP_SIZE valid rows will have four 'True' values in a row, we only count the first occurrence
+        # We can mark the first of each group by checking the previous value.
+        first_of_sequence = valid_sequences & (~valid_sequences.shift(1, fill_value=False))
+
+        # Sum up the True values in 'first_of_sequence' to get the total count of valid groups
+        count_valid_groups = first_of_sequence.sum()
+        return count_valid_groups
+        
     
     def group_candles_by_percentage_change(self, bucket_size: int) -> Dict[int, int]:
         """

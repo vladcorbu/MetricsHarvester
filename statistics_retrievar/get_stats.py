@@ -1,19 +1,18 @@
 import argparse
 import sys
-from typing import Dict, Tuple
+from typing import Dict
 
-import pandas as pd
 from data_analyser import DataAnalyser
 
 SUPPORTED_COMMANDS_LIST = [
     "count_candles_by_color", 
-    "group_candles_by_percentage_movement"
+    "group_candles_by_percentage_change"
 ]
 
 def help() -> None:
     print(f"""{sys.argv[0]} usage:
 1. command: python {sys.argv[0]} -cmd count_candles_by_color -i infile.csv -o outfile
-2. command: python {sys.argv[0]} -cmd group_candles_by_percentage_movement -i infile.csv -bz 2 -o outfile """)
+2. command: python {sys.argv[0]} -cmd group_candles_by_percentage_change -i infile.csv -bz 2 -o outfile """)
     exit(1)
 
 def main():
@@ -42,7 +41,7 @@ def main():
             f.write(f"Red candles: {red_candles_count}.\n")
             f.write(f"No-change candles: {gray_candles_count}.\n")
             
-        elif args.command == "group_candles_by_percentage_movement":
+        elif args.command == "group_candles_by_percentage_change":
             
             candles_grouping: Dict[int, int] = analyser.group_candles_by_percentage_change(args.bucket_size)
             for key in sorted(candles_grouping.keys()):

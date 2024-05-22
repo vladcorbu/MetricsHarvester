@@ -1,9 +1,10 @@
-import requests
-import pandas as pd
-from datetime import datetime, timedelta
-import time
 import logging
+import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timedelta
+
+import pandas as pd
+import requests
 
 # Setting up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
