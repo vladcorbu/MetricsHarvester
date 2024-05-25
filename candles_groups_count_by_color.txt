@@ -1,0 +1,12 @@
+Interval [-40% -> -36.01%] has 1 samples.
+Interval [-20% -> -16.01%] has 2 samples.
+Interval [-16% -> -12.01%] has 12 samples.
+Interval [-12% -> -8.01%] has 42 samples.
+Interval [-8% -> -4.01%] has 168 samples.
+Interval [-4% -> -0.01%] has 970 samples.
+Interval [0% -> 3.99%] has 1001 samples.
+Interval [4% -> 7.99%] has 194 samples.
+Interval [8% -> 11.99%] has 63 samples.
+Interval [12% -> 15.99%] has 10 samples.
+Interval [16% -> 19.99%] has 5 samples.
+Interval [20% -> 23.99%] has 1 samples.

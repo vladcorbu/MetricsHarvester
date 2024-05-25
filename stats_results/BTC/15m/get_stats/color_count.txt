@@ -1,0 +1,6 @@
+This file contains the frequency of green/red/doji candles in the dataset.
+In the context of trading, a candle that does not change the price is often called a "doji".
+
+Green candles: 118122.
+Red candles: 115997.
+Doji candles: 391.
