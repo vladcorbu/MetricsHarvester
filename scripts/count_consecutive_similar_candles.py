@@ -1,9 +1,11 @@
 import argparse
+import os
+import sys
 
-from data_analyser import CandleColor, DataAnalyser
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from data_analysis.analyser import CandleColor, DataAnalyser
 
 MAX_IN_A_ROW = 20  # We expect a maximum number of 20 consecutive candles of the same color
-
 
 def main():
 
@@ -32,10 +34,11 @@ def main():
                 "Note that in a dataset with a sequence like red->green->green->green->green->red, we only count 1 group of 4 green candles.\n"
             ]
         )
+        
         # Stats about GREEN consecutive candles
         groups_count = {}
         for i in range(2, MAX_IN_A_ROW):
-            groups_count[i] = analyser.count_consecutive_candles(i, CandleColor.GREEN)
+            groups_count[i] = analyser.count_consecutive_candles(i, "fdsfs")
 
         groups_count = {k: v for k, v in groups_count.items() if v != 0}  # filter out 0 values
         f.write(f"\nGREEN dict: {groups_count}\n")

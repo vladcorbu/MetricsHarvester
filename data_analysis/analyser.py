@@ -11,6 +11,7 @@ class CandleColor(NamedTuple):
 
 
 class DataAnalyser:
+
     INPUT_FILE_EXTENSION = ".csv"
     OPEN_PRICE_LABEL = "Open"
     CLOSE_PRICE_LABEL = "Close"
@@ -25,9 +26,7 @@ class DataAnalyser:
             raise FileNotFoundError(f"File {data_file} does not exists on disk.")
         else:
             if not os.path.splitext(data_file)[1] == self.INPUT_FILE_EXTENSION:
-                raise Exception(
-                    f"{os.path.splitext(data_file)[1]} extension not supported."
-                )
+                raise Exception(f"{os.path.splitext(data_file)[1]} extension not supported.")
 
         self.data_file = data_file
         self.data: pd.DataFrame = None
@@ -98,59 +97,54 @@ class DataAnalyser:
 
         # Since each sequence of GROUP_SIZE valid rows will have four 'True' values in a row, we only count the first occurrence
         # We can mark the first of each group by checking the previous value.
-        first_of_sequence = valid_sequences & (
-            ~valid_sequences.shift(1, fill_value=False)
-        )
+        first_of_sequence = valid_sequences & (~valid_sequences.shift(1, fill_value=False))
 
         # Sum up the True values in 'first_of_sequence' to get the total count of valid groups
         count_valid_groups = first_of_sequence.sum()
         return count_valid_groups
 
-    def group_candles_by_percentage_change(self, bucket_size: int) -> Dict[int, int]:
+    def group_candles_by_percentage_change(self, interval_size: int) -> Dict[int, int]:
         """
-        Groups candles in buckets based on their percentage movement and bucket_size.
-        If bucket_size==5, we are going to create the following keys in the dictionary: 0,+-5,+-10,...+-95.\n
-        If the candles price has:
-        - raised by 7%, we place it in dict[5].
-        - raised by 16%, we place it in dict[15].
-        - fallen by -11%, we place it in dict[-15].
+        Groups candles into intervals based on their percentage movement.
 
-        A "lower approximation" to the keys from dictionary is performed.
+        The candles are grouped into buckets according to the specified interval size.
+        For example, if `interval_size` is 5, the resulting dictionary will have keys such as:
+        0, ±5, ±10, ..., ±95.
+
+        The placement of candles into these buckets is determined by their percentage change:
+        - A candle with a price increase of 7% will be placed in `dict[5]`.
+        - A candle with a price increase of 16% will be placed in `dict[15]`.
+        - A candle with a price decrease of -11% will be placed in `dict[-15]`.
+
+        This method performs a "lower approximation" to determine the bucket keys, meaning
+        that each candle is placed in the largest bucket interval that is less than or equal
+        to its percentage change.
 
         Args:
-            bucket_size (int): bucket size.
+            interval_size (int): The size of each bucket interval.
+
+        Raises:
+            ValueError: If interval_size is not an integer between 1 and 99.
 
         Returns:
-            Dict[int, int]: counts how many candles are in each bucket. Key 10 stores the number of candles
-            that had a raised between 10% and 15% (if bucket_size==5).
+            Dict[int, int]: A dictionary where each key represents an interval, and the value
+            is the count of candles in that interval. For example, if `interval_size` is 5,
+            the key 10 will store the number of candles that had a percentage change between
+            10% and 15%.
         """
-        if bucket_size <= 0 or bucket_size >= 100:
-            raise Exception("Bucket_Size must be an integer between 0 and 100.")
+        if interval_size <= 0 or interval_size >= 100:
+            raise Exception("Interval_size must be an integer between 0 and 100.")
 
-        buckets_dict = {}
+        intervals_dict = {}
 
         for _, row in self.data.iterrows():
-            change = compute_percentage_change(
-                open_price=float(row[self.OPEN_PRICE_LABEL]),
-                close_price=float(row[self.CLOSE_PRICE_LABEL]),
-            )
 
-            targetKey = int(change * 100 / bucket_size) * bucket_size
-            if change < 0:
-                targetKey = targetKey - bucket_size
-            buckets_dict[targetKey] = buckets_dict.setdefault(targetKey, 0) + 1
+            # compute percentage change
+            open_price = (float(row[self.OPEN_PRICE_LABEL]),)
+            close_price = (float(row[self.CLOSE_PRICE_LABEL]),)
+            change = (close_price / open_price - 1) * 100
 
-        return buckets_dict
+            targetKey = int(change // interval_size) * interval_size
+            intervals_dict[targetKey] = intervals_dict.setdefault(targetKey, 0) + 1
 
-
-def compute_percentage_change(open_price: float, close_price: float) -> float:
-    """Return the percentage movement of a candle given the open and close prices.
-
-    Args:
-        open_price (float): start price
-        close_price (float): end price
-
-    Returns:
-        float: percentage movement (it can be negative if open_price > close_price)
-    """
-    return close_price / open_price - 1
+        return intervals_dict
